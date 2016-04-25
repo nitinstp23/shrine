@@ -233,7 +233,13 @@ class Shrine
       end
 
       # Uploads the file to S3.
+      # When options[:content_type] is 'video/mp4',
+      # S3 is expecting a content_md5 also in options, or else it will fail to upload
+      # with Aws::S3::Errors::BadDigest: The Content-MD5 you specified did not match what we received.
       def put(io, id, **options)
+        options.merge!(content_md5: Digest::MD5.base64digest(File.read(io))) if
+          options[:content_type] == 'video/mp4'
+
         object(id).put(body: io, **options)
       end
 
